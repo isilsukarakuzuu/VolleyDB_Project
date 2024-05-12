@@ -24,6 +24,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('dashboard/database-manager/', views.database_manager_dashboard, name='database_manager_dashboard'),
     path('dashboard/database-manager/add_user/', views.add_user, name='add_user'),
+    path('dashboard/database-manager/get_stadium/', views.get_stadium, name='get_stadium'),
     path('dashboard/database-manager/update_stadium/', views.update_stadium, name='update_stadium'),
     path('dashboard/player/', views.player_dashboard, name='player_dashboard'),
     path('dashboard/coach/', views.coach_dashboard, name='coach_dashboard'),

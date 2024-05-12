@@ -1,3 +1,4 @@
+SET foreign_key_checks = 0;
 DROP TABLE IF EXISTS SessionSquads;
 DROP TABLE IF EXISTS MatchSession;
 DROP TABLE IF EXISTS PlayerPositions;
@@ -10,6 +11,7 @@ DROP TABLE IF EXISTS Jury;
 DROP TABLE IF EXISTS Coach;
 DROP TABLE IF EXISTS Player;
 DROP TABLE IF EXISTS DatabaseManager;
+SET foreign_key_checks = 1;
 
 CREATE TABLE IF NOT EXISTS DatabaseManager (
     username VARCHAR(256) PRIMARY KEY,
@@ -49,7 +51,7 @@ CREATE TABLE IF NOT EXISTS Positions (
 
 CREATE TABLE IF NOT EXISTS Stadium (
     stadium_ID INTEGER PRIMARY KEY,
-    stadium_name VARCHAR(256),
+    stadium_name VARCHAR(256) UNIQUE,
     country VARCHAR(256),
     UNIQUE (stadium_ID, stadium_name, country)
 );
@@ -110,7 +112,7 @@ CREATE TABLE IF NOT EXISTS MatchSession (
     assigned_jury_username VARCHAR(256) NOT NULL,
     rating REAL,
     FOREIGN KEY (team_ID) REFERENCES Team(team_ID),
-    FOREIGN KEY (stadium_id, stadium_name, stadium_country) REFERENCES Stadium(stadium_ID, stadium_name, country),
+    FOREIGN KEY (stadium_id, stadium_name, stadium_country) REFERENCES Stadium(stadium_ID, stadium_name, country) ON UPDATE CASCADE,
     FOREIGN KEY (assigned_jury_username) REFERENCES Jury(username)
 );
 

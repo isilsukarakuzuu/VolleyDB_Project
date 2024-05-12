@@ -9,6 +9,7 @@ from django.db import connection
 from django.contrib import messages
 from django.conf import settings
 import mysql.connector
+from django.http import JsonResponse
 
 def connect_to_database():
     connection_params = settings.DATABASES['default']
@@ -24,7 +25,7 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
+        request.session['username'] = username
         queries = {
             'Jury': f"SELECT * FROM Jury WHERE username = '{username}' AND password = '{password}'",
             'Coach': f"SELECT * FROM Coach WHERE username = '{username}' AND password = '{password}'",
@@ -56,10 +57,11 @@ def login_view(request):
     return render(request, 'login.html')
 
 def database_manager_dashboard(request):
-    # This view is accessible only to authenticated users
-    return render(request, 'database_manager_dashboard.html')
+    database_manager_name = request.session.get('username')
+    return render(request, 'database_manager_dashboard.html', {'database_manager_name': database_manager_name})
 
 def add_user(request):
+    database_manager_name = request.session.get('username')
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -95,7 +97,6 @@ def add_user(request):
         except Exception as e:
             # Check if the error message is related to the trigger preventing insertion
             if 'Adding new Database Managers is not allowed' in str(e):
-                
                 messages.error(request, 'Adding new Database Managers is not allowed')
             else:
                 # If insertion failed due to other reasons, display a generic error message
@@ -105,20 +106,49 @@ def add_user(request):
         cursor.close()
         connection.close()
 
-    return render(request, 'database_manager_dashboard.html')
+    return render(request, 'database_manager_dashboard.html', {'database_manager_name': database_manager_name})
+
+def get_stadium(request):
+    database_manager_name = request.session.get('username')
+    if request.method == 'POST':
+        connection = connect_to_database()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT stadium_ID, stadium_name FROM Stadium")
+            stadiums = cursor.fetchall()
+        # Convert the list of tuples to a list of dictionaries
+        stadiums_data = [{'stadium_ID': stadium[0], 'stadium_name': stadium[1]} for stadium in stadiums]
+        # Return JSON response with stadiums list
+        cursor.close()
+        connection.close()
+        return JsonResponse(stadiums_data, safe=False)
+    return render(request, 'database_manager_dashboard.html', {'database_manager_name': database_manager_name})
 
 def update_stadium(request):
-    # Add functionality to update stadium information here
-    return render(request, 'update_stadium.html')
-    
+    database_manager_name = request.session.get('username')
+    if request.method == 'POST':
+        new_name = request.POST.get('new_stadium_name')
+        stadium_id = request.POST.get('stadium')
+        connection = connect_to_database()
+        with connection.cursor() as cursor:
+            # Update stadium name in the Stadium table
+            cursor.execute("UPDATE Stadium SET stadium_name = %s WHERE stadium_ID = %s", [new_name, stadium_id])
+        connection.commit()
+        cursor.close()
+        connection.close()
+        messages.success(request, 'Stadium updated successfully!')
+    return render(request, 'database_manager_dashboard.html', {'database_manager_name': database_manager_name})
+
 def player_dashboard(request):
+    player_name = request.session.get('username')
     # Add player-specific functionalities here
-    return render(request, 'player_dashboard.html')
+    return render(request, 'player_dashboard.html', {'player_name': player_name})
 
 def coach_dashboard(request):
+    coach_name = request.session.get('username')
     # Add coach-specific functionalities here
-    return render(request, 'coach_dashboard.html')
+    return render(request, 'coach_dashboard.html', {'coach_name': coach_name})
 
 def jury_dashboard(request):
+    jury_name = request.session.get('username')
     # Add jury-specific functionalities here
-    return render(request, 'jury_dashboard.html')
+    return render(request, 'jury_dashboard.html', {'jury_name': jury_name})
