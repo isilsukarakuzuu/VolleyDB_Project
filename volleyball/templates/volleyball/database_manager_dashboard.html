@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Manager Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+      text-align: center;
+      color: #333333;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #333333;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="date"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+
+    button[type="submit"] {
+      background-color: #007bff;
+      color: #ffffff;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    .radio-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .radio-group label {
+      margin-right: 10px;
+    }
+
+    .additional-fields {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Welcome, Database Manager!</h2>
+
+    <!-- Form to add new user -->
+    <form id="add_user_form" action="{% url 'add_user' %}" method="post">
+      {% csrf_token %}
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+      <label for="surname">Surname:</label>
+      <input type="text" id="surname" name="surname" required>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <!-- Radio buttons for selecting user type -->
+      <div class="radio-group">
+        <input type="radio" id="jury" name="user_type" value="jury" required>
+        <label for="jury">Jury</label>
+        <input type="radio" id="player" name="user_type" value="player" required>
+        <label for="player">Player</label>
+        <input type="radio" id="coach" name="user_type" value="coach" required>
+        <label for="coach">Coach</label>
+      </div>
+
+      <!-- Additional form fields for nationality, date of birth, height, and weight -->
+      <div class="additional-fields" id="additional_fields"></div>
+
+      <button type="submit"> Add User </button>
+    </form>
+
+    <!-- Form to update stadium name -->
+    <form action="{% url 'update_stadium' %}" method="post">
+      {% csrf_token %}
+      <label for="old_stadium_name">Old Stadium Name:</label>
+      <input type="text" id="old_stadium_name" name="old_stadium_name" required>
+      <label for="new_stadium_name">New Stadium Name:</label>
+      <input type="text" id="new_stadium_name" name="new_stadium_name" required>
+      <button type="submit"> Update Stadium Name </button>
+    </form>
+  </div>
+  <script>
+    // Get the form and the div for additional fields
+    const form = document.getElementById('add_user_form');
+    const additionalFields = document.getElementById('additional_fields');
+
+    // Add event listener to radio buttons
+    form.addEventListener('change', function (event) {
+      if (event.target.name === 'user_type') {
+        // Clear existing additional fields
+        additionalFields.innerHTML = '';
+
+        // Create additional form fields based on selected user type
+        const userType = event.target.value;
+        if (userType === 'jury' || userType === 'coach') {
+          // Add nationality field
+          const nationalityLabel = document.createElement('label');
+          nationalityLabel.setAttribute('for', 'nationality');
+          nationalityLabel.textContent = 'Nationality:';
+          const nationalityInput = document.createElement('input');
+          nationalityInput.setAttribute('type', 'text');
+          nationalityInput.setAttribute('id', 'nationality');
+          nationalityInput.setAttribute('name', 'nationality');
+          additionalFields.appendChild(nationalityLabel);
+          additionalFields.appendChild(nationalityInput);
+        } else if (userType === 'player') {
+          // Add date of birth, height, and weight fields
+          const dateOfBirthLabel = document.createElement('label');
+          dateOfBirthLabel.setAttribute('for', 'date_of_birth');
+          dateOfBirthLabel.textContent = 'Date of Birth:';
+          const dateOfBirthInput = document.createElement('input');
+          dateOfBirthInput.setAttribute('type', 'date');
+          dateOfBirthInput.setAttribute('id', 'date_of_birth');
+          dateOfBirthInput.setAttribute('name', 'date_of_birth');
+
+          const heightLabel = document.createElement('label');
+          heightLabel.setAttribute('for', 'height');
+          heightLabel.textContent = 'Height:';
+          const heightInput = document.createElement('input');
+          heightInput.setAttribute('type', 'text');
+          heightInput.setAttribute('id', 'height');
+          heightInput.setAttribute('name', 'height');
+
+          const weightLabel = document.createElement('label');
+          weightLabel.setAttribute('for', 'weight');
+          weightLabel.textContent = 'Weight:';
+          const weightInput = document.createElement('input');
+          weightInput.setAttribute('type', 'text');
+          weightInput.setAttribute('id', 'weight');
+          weightInput.setAttribute('name', 'weight');
+
+          additionalFields.appendChild(dateOfBirthLabel);
+          additionalFields.appendChild(dateOfBirthInput);
+          additionalFields.appendChild(heightLabel);
+          additionalFields.appendChild(heightInput);
+          additionalFields.appendChild(weightLabel);
+          additionalFields.appendChild(weightInput);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
