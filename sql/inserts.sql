@@ -162,6 +162,24 @@ VALUES
     (44, 'user_8323', 0),
     (45, 'user_8323', 3);
 
+INSERT INTO Stadium (stadium_ID, stadium_name, country)
+VALUES
+    (0, 'Burhan Felek Voleybol Salonu', 'TR'),
+    (1, 'GD Voleybol Arena', 'TR'),
+    (2, 'Copper Box Arena', 'UK');
+
+INSERT INTO MatchSession (session_ID, team_ID, stadium_ID, stadium_name, stadium_country, time_slot, date, assigned_jury_username, rating)
+VALUES
+    (0, 0, 0, 'Burhan Felek Voleybol Salonu', 'TR', 1, '2024-03-10', 'o_ozcelik', 4.5),
+    (1, 1, 1, 'GD Voleybol Arena', 'TR', 1, '2024-04-03', 'o_ozcelik', 4.9),
+    (2, 0, 1, 'GD Voleybol Arena', 'TR', 3, '2024-04-03', 'o_ozcelik', 4.4),
+    (3, 2, 2, 'Copper Box Arena', 'UK', 2, '2024-04-03', 'm_sevinc', 4.9),
+    (4, 3, 2, 'Copper Box Arena', 'UK', 2, '2023-04-03', 'e_sener', 4.5),
+    (5, 3, 1, 'GD Voleybol Arena', 'TR', 1, '2023-05-27', 's_engin', 4.4),
+    (6, 0, 1, 'GD Voleybol Arena', 'TR', 1, '2022-09-01', 'm_sevinc', 4.6),
+    (7, 0, 2, 'Copper Box Arena', 'UK', 3, '2023-05-02', 'o_ozcelik', 4.7),
+    (8, 1, 0, 'Burhan Felek Voleybol Salonu', 'TR', 1, '2024-02-10', 'o_ozcelik', 4.5);
+
 INSERT INTO SessionSquads (squad_ID, session_ID, played_player_username, position_ID)
 VALUES
     (1, 0, 'g_orge', 0),
@@ -212,21 +230,4 @@ VALUES
     (46, 7, 'a_kalac', 4),
     (47, 7, 'e_karakurt', 2),
     (48, 7, 'a_aykac', 0);
-
-INSERT INTO Stadium (stadium_ID, stadium_name, country)
-VALUES
-    (0, 'Burhan Felek Voleybol Salonu', 'TR'),
-    (1, 'GD Voleybol Arena', 'TR'),
-    (2, 'Copper Box Arena', 'UK');
-
-INSERT INTO MatchSession (session_ID, team_ID, stadium_ID, stadium_name, stadium_country, time_slot, date, assigned_jury_username, rating)
-VALUES
-    (0, 0, 0, 'Burhan Felek Voleybol Salonu', 'TR', 1, '2024-03-10', 'o_ozcelik', 4.5),
-    (1, 1, 1, 'GD Voleybol Arena', 'TR', 1, '2024-04-03', 'o_ozcelik', 4.9),
-    (2, 0, 1, 'GD Voleybol Arena', 'TR', 3, '2024-04-03', 'o_ozcelik', 4.4),
-    (3, 2, 2, 'Copper Box Arena', 'UK', 2, '2024-04-03', 'm_sevinc', 4.9),
-    (4, 3, 2, 'Copper Box Arena', 'UK', 2, '2023-04-03', 'e_sener', 4.5),
-    (5, 3, 1, 'GD Voleybol Arena', 'TR', 1, '2023-05-27', 's_engin', 4.4),
-    (6, 0, 1, 'GD Voleybol Arena', 'TR', 1, '2022-09-01', 'm_sevinc', 4.6),
-    (7, 0, 2, 'Copper Box Arena', 'UK', 3, '2023-05-02', 'o_ozcelik', 4.7),
-    (8, 1, 0, 'Burhan Felek Voleybol Salonu', 'TR', 1, '2024-02-10', 'o_ozcelik', 4.5);
+    

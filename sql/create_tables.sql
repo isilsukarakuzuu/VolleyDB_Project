@@ -92,15 +92,6 @@ CREATE TABLE IF NOT EXISTS PlayerPositions (
     FOREIGN KEY (position) REFERENCES Positions(position_ID)
 );
 
-CREATE TABLE IF NOT EXISTS SessionSquads (
-    squad_ID INTEGER PRIMARY KEY,
-    session_ID INTEGER,
-    played_player_username VARCHAR(256),
-    position_ID INTEGER,
-    FOREIGN KEY (played_player_username) REFERENCES Player(username),
-    FOREIGN KEY (position_ID) REFERENCES Positions(position_ID)
-);
-
 CREATE TABLE IF NOT EXISTS MatchSession (
     session_ID INTEGER PRIMARY KEY,
     team_ID INTEGER,
@@ -114,5 +105,15 @@ CREATE TABLE IF NOT EXISTS MatchSession (
     FOREIGN KEY (team_ID) REFERENCES Team(team_ID),
     FOREIGN KEY (stadium_id, stadium_name, stadium_country) REFERENCES Stadium(stadium_ID, stadium_name, country) ON UPDATE CASCADE,
     FOREIGN KEY (assigned_jury_username) REFERENCES Jury(username)
+);
+
+CREATE TABLE IF NOT EXISTS SessionSquads (
+    squad_ID INTEGER PRIMARY KEY,
+    session_ID INTEGER,
+    played_player_username VARCHAR(256),
+    position_ID INTEGER,
+    FOREIGN KEY (played_player_username) REFERENCES Player(username),
+    FOREIGN KEY (position_ID) REFERENCES Positions(position_ID),
+    FOREIGN KEY (session_ID) REFERENCES MatchSession(session_ID) ON DELETE CASCADE
 );
 
