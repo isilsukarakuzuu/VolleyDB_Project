@@ -143,9 +143,43 @@ def player_dashboard(request):
     return render(request, 'player_dashboard.html', {'player_name': player_name})
 
 def coach_dashboard(request):
+    
     coach_name = request.session.get('username')
-    # Add coach-specific functionalities here
-    return render(request, 'coach_dashboard.html', {'coach_name': coach_name})
+
+    if request.method == 'GET':
+        conn = connect_to_database()
+        cursor = conn.cursor()
+
+        try:
+            query = f"SELECT * FROM MatchSession"
+            cursor.execute(query)
+            matches = cursor.fetchall()
+            print("Matches: " + str(matches), file=sys.stderr)
+        except Exception as e:
+            messages.error(request, f'Failed to fetch matches: {e}')
+            matches = []
+
+        cursor.close()
+        conn.close()
+
+        return render(request, 'coach_dashboard.html', {'coach_name': coach_name, 'sessions': matches})
+    
+    if request.method == 'POST':
+        conn = connect_to_database()
+        cursor = conn.cursor()
+
+        try:
+            query = f"DELETE FROM MatchSession WHERE session_ID = {request.POST.get('session_id')}"
+            cursor.execute(query)
+            conn.commit()
+        except Exception as e:
+            messages.error(request, f'Failed to delete match: {e}')
+            return HttpResponse('Failed to delete match')
+
+        cursor.close()
+        conn.close()
+
+        return redirect('coach_dashboard')
 
 def jury_dashboard(request):
     if request.method == 'GET':

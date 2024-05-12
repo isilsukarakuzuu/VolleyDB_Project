@@ -1,16 +1,67 @@
-<!-- coach_dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coach Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Match Sessions</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
-
 <body>
-  <h2>Welcome, Coach!</h2>
-  <!-- Add coach-specific content and functionalities here -->
+    <h1>Coach Dashboard</h1>
+    <p class="welcome-message">Welcome, {{ coach_name }}!</p>
+    <h2>Delete Match Sessions</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Session ID</th>
+                <th>Team ID</th>
+                <th>Stadium ID</th>
+                <th>Stadium Name</th>
+                <th>Stadium Country</th>
+                <th>Time Slot</th>
+                <th>Date</th>
+                <th>Assigned Jury Username</th>
+                <th>Rating</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for session in sessions %}
+            <tr>
+                <td>{{ session.0 }}</td>
+                <td>{{ session.1 }}</td>
+                <td>{{ session.2 }}</td>
+                <td>{{ session.3 }}</td>
+                <td>{{ session.4 }}</td>
+                <td>{{ session.5 }}</td>
+                <td>{{ session.6 }}</td>
+                <td>{{ session.7 }}</td>
+                <td>{{ session.8 }}</td>
+                <td>
+                    <form method="POST" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="session_id" value="{{ session.0 }}">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
-
 </html>
