@@ -83,4 +83,17 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Adding new Database Managers is not allowed';
 END//
 
+CREATE TRIGGER prevent_same_time_slot_and_date_and_stadium
+BEFORE INSERT ON MatchSession
+FOR EACH ROW
+BEGIN
+    DECLARE session_count INT;
+
+    -- Check if there is a session with the same time slot, date and stadium
+    SELECT COUNT(*) INTO session_count FROM MatchSession WHERE (time_slot = NEW.time_slot OR time_slot + 1 = NEW.time_slot OR time_slot = NEW.time_slot + 1) AND date = NEW.date AND stadium_id = NEW.stadium_id;
+    IF session_count > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'There is already a session with the same time slot, date and stadium';
+    END IF;
+END//
+
 DELIMITER ;

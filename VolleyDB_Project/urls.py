@@ -29,4 +29,5 @@ urlpatterns = [
     path('dashboard/player/', views.player_dashboard, name='player_dashboard'),
     path('dashboard/coach/', views.coach_dashboard, name='coach_dashboard'),
     path('dashboard/jury/', views.jury_dashboard, name='jury_dashboard'),
+    path('create_match_session/', views.create_match_session, name='create_match_sesion'),
 ]

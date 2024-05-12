@@ -326,3 +326,53 @@ def jury_dashboard(request):
         conn.close()
 
         return HttpResponse('Rating submitted successfully')
+
+def create_match_session(request):
+    
+    if request.method == 'POST':
+        session_id = request.POST.get('session_id')
+        team_id = request.POST.get('team_id')
+        stadium_id = request.POST.get('stadium_id')
+        stadium_name = request.POST.get('stadium_name')
+        stadium_country = request.POST.get('stadium_country')
+        time_slot = request.POST.get('time_slot')
+        date = request.POST.get('date')
+        assigned_jury_username = request.POST.get('assigned_jury_username')
+
+        connection = connect_to_database()
+
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        
+        try:
+            with connection.cursor() as cursor:
+                team_query = \
+                    f"""
+                    SELECT * 
+                    FROM Team 
+                    WHERE team_ID = '{team_id}' AND coach_username = '{request.session.get('username')}' AND contract_start <= '{current_date}' AND contract_finish >= '{current_date}'
+                    """
+                cursor.execute(team_query)
+                team = cursor.fetchone()
+
+                if not team:
+                    cursor.close()
+                    messages.error(request, 'You are not the coach of this team')
+                    return HttpResponse('You are not the coach of this team')
+                
+                insert_query = \
+                    f"""
+                    INSERT INTO MatchSession (session_ID, team_ID, stadium_ID, stadium_name, stadium_country, time_slot, date, assigned_jury_username) 
+                    VALUES ('{session_id}', '{team_id}', '{stadium_id}', '{stadium_name}', '{stadium_country}', '{time_slot}', '{date}', '{assigned_jury_username}')
+                    """
+                cursor.execute(insert_query)
+        except Exception as e:
+            cursor.close()
+            messages.error(request, f'Failed to create match session: {e}')
+            return HttpResponse('Failed to create match session')
+        
+        connection.commit()
+        cursor.close()
+
+
+    return HttpResponse('Match session created successfully')
