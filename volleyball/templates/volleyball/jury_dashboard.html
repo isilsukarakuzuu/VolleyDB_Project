@@ -1,16 +1,72 @@
-<!-- jury_dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jury Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Sessions</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        input[type="number"] {
+            width: 50px;
+        }
+    </style>
 </head>
-
 <body>
-  <h2>Welcome, Jury!</h2>
-  <!-- Add jury-specific content and functionalities here -->
+    <h1>Jury Dashboard</h1>
+    <p class="welcome-message">Welcome, {{ jury_username }}!</p>
+    <h2>Match Sessions</h2>
+    <form method="post">
+        {% csrf_token %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Session ID</th>
+                    <th>Team ID</th>
+                    <th>Stadium ID</th>
+                    <th>Stadium Name</th>
+                    <th>Stadium Country</th>
+                    <th>Time Slot</th>
+                    <th>Date</th>
+                    <th>Assigned Jury Username</th>
+                    <th>Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in sessions %}
+                <tr>
+                    <td>{{ session.0 }}</td>
+                    <td>{{ session.1 }}</td>
+                    <td>{{ session.2 }}</td>
+                    <td>{{ session.3 }}</td>
+                    <td>{{ session.4 }}</td>
+                    <td>{{ session.5 }}</td>
+                    <td>{{ session.6 }}</td>
+                    <td>{{ session.7 }}</td>
+                    <td>
+                        <input type="number" step="0.1" name="rating_{{ session.0 }}" value="{{ session.8 }} " min="0" max="5">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit">Submit Changes</button>
+    </form>
+    <h2>Jury Ratings</h2>
+    <p>Average Rating: {{ average_rating }}</p>
+    <p>Total Rated Sessions: {{ rated_sessions_count }}</p>
 </body>
-
 </html>

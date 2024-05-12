@@ -1,10 +1,9 @@
+import datetime
+import sys
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
 from django.db import connection
 from django.contrib import messages
 from django.conf import settings
@@ -216,11 +215,114 @@ def player_dashboard(request):
     return render(request, 'player_dashboard.html', context)
 
 def coach_dashboard(request):
+    
     coach_name = request.session.get('username')
-    # Add coach-specific functionalities here
-    return render(request, 'coach_dashboard.html', {'coach_name': coach_name})
+
+    if request.method == 'GET':
+        conn = connect_to_database()
+        cursor = conn.cursor()
+
+        try:
+            query = f"SELECT * FROM MatchSession"
+            cursor.execute(query)
+            matches = cursor.fetchall()
+            print("Matches: " + str(matches), file=sys.stderr)
+        except Exception as e:
+            messages.error(request, f'Failed to fetch matches: {e}')
+            matches = []
+
+        cursor.close()
+        conn.close()
+
+        return render(request, 'coach_dashboard.html', {'coach_name': coach_name, 'sessions': matches})
+    
+    if request.method == 'POST':
+        conn = connect_to_database()
+        cursor = conn.cursor()
+
+        try:
+            query = f"DELETE FROM MatchSession WHERE session_ID = {request.POST.get('session_id')}"
+            cursor.execute(query)
+            conn.commit()
+        except Exception as e:
+            messages.error(request, f'Failed to delete match: {e}')
+            return HttpResponse('Failed to delete match')
+
+        cursor.close()
+        conn.close()
+
+        return redirect('coach_dashboard')
 
 def jury_dashboard(request):
-    jury_name = request.session.get('username')
-    # Add jury-specific functionalities here
-    return render(request, 'jury_dashboard.html', {'jury_name': jury_name})
+    if request.method == 'GET':
+
+        jury_username = request.session.get('username')
+        print("JURY USERNAME: " + str(jury_username), file=sys.stderr)
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        conn = connect_to_database()
+        cursor = conn.cursor()
+
+        try:
+            query = f"SELECT * FROM MatchSession WHERE date < '{current_date}' AND assigned_jury_username = '{jury_username}' AND rating IS NULL"
+            cursor.execute(query)
+            matches = cursor.fetchall()
+            print("Matches: " + str(matches), file=sys.stderr)
+        except Exception as e:
+            messages.error(request, f'Failed to fetch matches: {e}')
+            matches = []
+
+        try:
+            query = f"SELECT COUNT(*) FROM MatchSession WHERE assigned_jury_username = '{jury_username}' AND rating IS NOT NULL"
+            cursor.execute(query)
+            rated_matches = cursor.fetchone()[0]
+
+            print("Rated Matches: " + str(rated_matches), file=sys.stderr)
+        except Exception as e:
+            messages.error(request, f'Failed to fetch rated matches: {e}')
+            rated_matches = 0
+
+        try:
+            query = f"SELECT AVG(rating) FROM MatchSession WHERE assigned_jury_username = '{jury_username}' AND rating IS NOT NULL"
+            cursor.execute(query)
+            avg_rating = cursor.fetchone()[0]
+            print("Average Rating: " + str(avg_rating), file=sys.stderr)
+        except Exception as e:
+            messages.error(request, f'Failed to fetch average rating: {e}')
+            avg_rating = "N/A"
+
+        cursor.close()
+        conn.close()
+
+        if not matches:
+            print(request, 'No matches found', file=sys.stderr)
+
+        return render(request, 'jury_dashboard.html', {'jury_username': jury_username, 'sessions': matches, 'rated_sessions_count': rated_matches, 'average_rating': avg_rating})
+
+    if request.method == 'POST':
+
+        print("POST REQUEST: " + str(request.POST), file=sys.stderr)
+
+        conn = connect_to_database()
+        cursor = conn.cursor()
+
+        for key, value in request.POST.items():
+            if key.startswith('rating_'):
+                try:
+                    session_id = int(key.split('_')[1])
+                    rating = float(value)
+
+                    print("Match Session ID: " + str(session_id), file=sys.stderr)
+                    print("New Rating: " + str(rating), file=sys.stderr)
+
+                    query = f"UPDATE MatchSession SET rating = {rating} WHERE session_ID = {session_id}"
+                    cursor.execute(query)
+                    conn.commit()
+                except Exception as e:
+                    messages.error(request, f'Failed to submit rating: {e}')
+                    return HttpResponse('Failed to submit rating')
+
+        cursor.close()
+        conn.close()
+
+        return HttpResponse('Rating submitted successfully')
