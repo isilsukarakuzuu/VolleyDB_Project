@@ -139,9 +139,81 @@ def update_stadium(request):
     return render(request, 'database_manager_dashboard.html', {'database_manager_name': database_manager_name})
 
 def player_dashboard(request):
-    player_name = request.session.get('username')
-    # Add player-specific functionalities here
-    return render(request, 'player_dashboard.html', {'player_name': player_name})
+    player_username = request.session.get('username')
+    sql_query = """
+        SELECT name, surname
+        FROM Player
+        WHERE username = %s
+    """
+    connect_to_database()
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query, [player_username])
+        player_data = cursor.fetchone()
+
+        # Extract player name and surname
+        player_name = player_data[0] if player_data else None
+        player_surname = player_data[1] if player_data else None
+
+        # Retrieve players played with
+        cursor.execute("""
+            SELECT DISTINCT p.name, p.surname
+            FROM Player p
+            JOIN SessionSquads ss ON p.username = ss.played_player_username
+            WHERE ss.session_ID IN (
+                SELECT DISTINCT session_ID
+                FROM SessionSquads
+                WHERE played_player_username = %s
+            )
+            AND ss.played_player_username != %s
+        """, [player_username, player_username])
+        players_played_with = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT AVG(height) AS average_height
+            FROM (
+                SELECT p.height
+                FROM Player p
+                JOIN SessionSquads ss ON p.username = ss.played_player_username
+                WHERE ss.played_player_username != %s
+                AND ss.session_ID IN (
+                    SELECT DISTINCT session_ID
+                    FROM SessionSquads
+                    WHERE played_player_username = %s
+                )
+                AND p.username != %s -- Exclude current player
+                GROUP BY p.username
+                HAVING COUNT(DISTINCT ss.session_ID) = (
+                    SELECT MAX(session_count)
+                    FROM (
+                        SELECT COUNT(DISTINCT ss.session_ID) AS session_count
+                        FROM Player p
+                        JOIN SessionSquads ss ON p.username = ss.played_player_username
+                        WHERE ss.played_player_username != %s
+                        AND ss.session_ID IN (
+                            SELECT DISTINCT session_ID
+                            FROM SessionSquads
+                            WHERE played_player_username = %s
+                        )
+                        AND p.username != %s -- Exclude current player
+                        GROUP BY p.username
+                    ) AS session_counts
+                )
+            ) AS players_with_most_sessions
+        """, [player_username, player_username, player_username, player_username, player_username, player_username])
+        average_height = cursor.fetchone()[0]
+    
+    cursor.close()
+    connection.close()
+    
+    context = {
+        'player_username': player_username,
+        'player_name': player_name,
+        'player_surname': player_surname,
+        'players_played_with': players_played_with,
+        'average_height': average_height,
+    }
+
+    return render(request, 'player_dashboard.html', context)
 
 def coach_dashboard(request):
     coach_name = request.session.get('username')
