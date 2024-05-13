@@ -254,39 +254,61 @@ def coach_dashboard(request):
         return redirect('coach_dashboard')
 
 def jury_dashboard(request):
+    
     if request.method == 'GET':
+        
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
 
         jury_username = request.session.get('username')
-        print("JURY USERNAME: " + str(jury_username), file=sys.stderr)
-        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        sql_query = """
+        SELECT name, surname
+        FROM Jury
+        WHERE username = %s
+        """
 
         conn = connect_to_database()
         cursor = conn.cursor()
 
+        cursor.execute(sql_query, [jury_username])
+        jury_data = cursor.fetchone()
+
+        jury_name = jury_data[0] if jury_data else None
+        jury_surname = jury_data[1] if jury_data else None
+
         try:
-            query = f"SELECT * FROM MatchSession WHERE date < '{current_date}' AND assigned_jury_username = '{jury_username}' AND rating IS NULL"
-            cursor.execute(query)
+            query = """
+                SELECT ms.session_ID, t.team_name, ms.stadium_name, ms.time_slot, ms.date, ms.rating
+                FROM MatchSession ms
+                JOIN Team t ON ms.team_ID = t.team_ID
+                WHERE ms.date < %s AND ms.assigned_jury_username = %s AND ms.rating IS NULL
+            """
+            cursor.execute(query, [current_date, jury_username])
             matches = cursor.fetchall()
-            print("Matches: " + str(matches), file=sys.stderr)
         except Exception as e:
             messages.error(request, f'Failed to fetch matches: {e}')
             matches = []
 
         try:
-            query = f"SELECT COUNT(*) FROM MatchSession WHERE assigned_jury_username = '{jury_username}' AND rating IS NOT NULL"
-            cursor.execute(query)
+            query = """
+                SELECT COUNT(*)
+                FROM MatchSession
+                WHERE assigned_jury_username = %s AND rating IS NOT NULL
+            """
+            cursor.execute(query, [jury_username])
             rated_matches = cursor.fetchone()[0]
 
-            print("Rated Matches: " + str(rated_matches), file=sys.stderr)
         except Exception as e:
             messages.error(request, f'Failed to fetch rated matches: {e}')
             rated_matches = 0
 
         try:
-            query = f"SELECT AVG(rating) FROM MatchSession WHERE assigned_jury_username = '{jury_username}' AND rating IS NOT NULL"
-            cursor.execute(query)
+            query = """
+                SELECT AVG(rating)
+                FROM MatchSession
+                WHERE assigned_jury_username = %s AND rating IS NOT NULL
+            """
+            cursor.execute(query, [jury_username])
             avg_rating = cursor.fetchone()[0]
-            print("Average Rating: " + str(avg_rating), file=sys.stderr)
         except Exception as e:
             messages.error(request, f'Failed to fetch average rating: {e}')
             avg_rating = "N/A"
@@ -294,15 +316,23 @@ def jury_dashboard(request):
         cursor.close()
         conn.close()
 
-        if not matches:
-            print(request, 'No matches found', file=sys.stderr)
+        context = {
+            'jury_username': jury_username,
+            'jury_name': jury_name,
+            'jury_surname': jury_surname,
+            'sessions': matches,
+            'rated_sessions_count': rated_matches,
+            'average_rating': avg_rating
+        }
 
-        return render(request, 'jury_dashboard.html', {'jury_username': jury_username, 'sessions': matches, 'rated_sessions_count': rated_matches, 'average_rating': avg_rating})
+        if not matches:
+            messages.info(request, 'No matches to rate')
+            return render(request, 'jury_dashboard.html', context)
+
+        return render(request, 'jury_dashboard.html', context)
 
     if request.method == 'POST':
-
-        print("POST REQUEST: " + str(request.POST), file=sys.stderr)
-
+        print(request.POST, file=sys.stderr)
         conn = connect_to_database()
         cursor = conn.cursor()
 
@@ -310,22 +340,20 @@ def jury_dashboard(request):
             if key.startswith('rating_'):
                 try:
                     session_id = int(key.split('_')[1])
+                    if(value == ''):
+                        continue
                     rating = float(value)
-
-                    print("Match Session ID: " + str(session_id), file=sys.stderr)
-                    print("New Rating: " + str(rating), file=sys.stderr)
-
                     query = f"UPDATE MatchSession SET rating = {rating} WHERE session_ID = {session_id}"
                     cursor.execute(query)
                     conn.commit()
                 except Exception as e:
                     messages.error(request, f'Failed to submit rating: {e}')
-                    return HttpResponse('Failed to submit rating')
+                    return redirect('jury_dashboard')
 
         cursor.close()
         conn.close()
 
-        return HttpResponse('Rating submitted successfully')
+        return redirect('jury_dashboard')
 
 def create_match_session(request):
     

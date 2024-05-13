@@ -67,11 +67,11 @@
   <div class="container">
     <h2>Player Dashboard</h2>
     <!-- Display welcome message -->
-    <p class="welcome-message">Welcome, {{ player_name }} {{ player_surname }}!</p>
+    <p class="welcome-message">Welcome, {{ player_name }} {{ player_surname }} !</p>
 
     <!-- Display list of players played with -->
     <div class="players-list">
-      <h3>Players You've Played with in Sessions :</h3>
+      <h3>Players You've Played with :</h3>
       <ul>
         {% if players_played_with %}
         {% for player in players_played_with %}
@@ -85,7 +85,7 @@
 
     <!-- Display average height -->
     <div class="average-height">
-      <h3>Average Height of Players You've Played with :</h3>
+      <h3>Average Height of Players You've Played with Most :</h3>
       {% if average_height %}
       <p>{{ average_height }} cm</p>
       {% else %}
