@@ -152,8 +152,153 @@
             </tr>
         </tbody>
     </table>
-    <script>
 
+    <!-- Display All Stadiums -->
+    <h2>Stadiums</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Stadium Name</th>
+                <th>Country</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stadium in stadiums %}
+            <tr>
+                <td>{{ stadium.0 }}</td>
+                <td>{{ stadium.1 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Create Squad</h2>
+    <form id="createSquadForm" method="post" action="/create_squad/">
+        {% csrf_token %}
+        <select id="sessionSelect" name="session_id" required>
+            <option value="" disabled selected>Select Session</option>
+            {% for session in matches %}
+            <option value="{{ session.0 }}">{{ session.0 }}</option>
+            {% endfor %}
+        </select>
+
+        <div id="squadFields">
+            <h3>Enter Player Names and Positions :</h3>
+
+            <div>
+                <p>Player 1:</p>
+                {% csrf_token %}
+                <select id="player1Select" class="player-select" required>
+                    <option value="" disabled selected>Select Player</option>
+                    {% for player in players %}
+                    <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
+                    {% endfor %}
+                </select>
+                <select id="position1Select" class="position-select" required>
+                    <option value="" disabled selected>Select Position</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <div>
+                <p>Player 2:</p>
+                <select id="player2Select" class="player-select" required>
+                    <option value="" disabled selected>Select Player</option>
+                    {% for player in players %}
+                    <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
+                    {% endfor %}
+                </select>
+                <select id="position2Select" class="position-select" required>
+                    <option value="" disabled selected>Select Position</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <div>
+                <p>Player 3:</p>
+                <select id="player3Select" class="player-select" required>
+                    <option value="" disabled selected>Select Player</option>
+                    {% for player in players %}
+                    <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
+                    {% endfor %}
+                </select>
+                <select id="position3Select" class="position-select" required>
+                    <option value="" disabled selected>Select Position</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <div>
+                <p>Player 4:</p>
+                <select id="player4Select" class="player-select" required>
+                    <option value="" disabled selected>Select Player</option>
+                    {% for player in players %}
+                    <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
+                    {% endfor %}
+                </select>
+                <select id="position4Select" class="position-select" required>
+                    <option value="" disabled selected>Select Position</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <div>
+                <p>Player 5:</p>
+                <select id="player5Select" class="player-select" required>
+                    <option value="" disabled selected>Select Player</option>
+                    {% for player in players %}
+                    <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
+                    {% endfor %}
+                </select>
+                <select id="position5Select" class="position-select" required>
+                    <option value="" disabled selected>Select Position</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <div>
+                <p>Player 6:</p>
+                <select id="player6Select" class="player-select" required>
+                    <option value="" disabled selected>Select Player</option>
+                    {% for player in players %}
+                    <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
+                    {% endfor %}
+                </select>
+                <select id="position6Select" class="position-select" required>
+                    <option value="" disabled selected>Select Position</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </div>
+
+            <button type="submit">Submit Squad</button>
+        </div>
+    </form>
+
+    <script>
         window.onload = function () {
             fetchStadiums();
             fetchJuryNamesSurnames();

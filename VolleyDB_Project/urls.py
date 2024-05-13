@@ -31,4 +31,5 @@ urlpatterns = [
     path('get_jury_names_surnames', views.get_jury_names_surnames, name='get_jury_names_surnames'),
     path('dashboard/jury/', views.jury_dashboard, name='jury_dashboard'),
     path('create_match_session/', views.create_match_session, name='create_match_sesion'),
+    path('create_squad/', views.create_squad, name='create_squad'),
 ]

@@ -260,6 +260,20 @@ def coach_dashboard(request):
         team_name = team[0] if team else None
         team_id = team[1] if team else None
 
+        stadium_query = "SELECT stadium_name, country FROM Stadium"
+        cursor.execute(stadium_query)
+        stadiums = cursor.fetchall()
+
+        #write query to get all players in the team
+        query = """
+            SELECT p.username, p.name, p.surname
+            FROM Player p
+            JOIN PlayerTeams pt ON p.username = pt.username
+            WHERE pt.team = %s
+        """
+        cursor.execute(query, [team_id])
+        players = cursor.fetchall()
+
         #get max session id
         cursor.execute("SELECT MAX(session_ID) FROM MatchSession")
         max_session_id = cursor.fetchone()[0]
@@ -279,6 +293,22 @@ def coach_dashboard(request):
             messages.error(request, f'Failed to fetch matches: {e}')
             matches = []
 
+        coach_matches_query = """
+                SELECT ms.session_ID
+                FROM MatchSession ms
+                JOIN Team t ON ms.team_ID = t.team_ID
+                WHERE t.coach_username = %s 
+                AND t.contract_start <= %s 
+                AND t.contract_finish >= %s
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM SessionSquads ss
+                    WHERE ss.session_ID = ms.session_ID
+                )
+                ORDER BY ms.session_ID
+            """
+        cursor.execute(coach_matches_query, [coach_username, current_date, current_date])
+        coach_matches = cursor.fetchall()
         cursor.close()
         conn.close()
 
@@ -288,7 +318,10 @@ def coach_dashboard(request):
             'sessions': matches,
             'team_name': team_name,
             'team_id': team_id,
-            'session_id': session_id
+            'session_id': session_id,
+            'stadiums': stadiums if stadiums else [],
+            'matches': coach_matches if coach_matches else [],
+            'players': players if players else []
         }
         return render(request, 'coach_dashboard.html', context)
     
@@ -308,6 +341,46 @@ def coach_dashboard(request):
         conn.close()
 
         return redirect('coach_dashboard')
+
+def create_squad(request):
+    if request.method == 'POST':
+        session_id = request.POST.get('session_id')
+        
+        # Extract player names and positions
+        players_and_positions = []
+        selected_players = set()  #chechk if the player is selected twice or more
+        for i in range(1, 7):  
+            player_username = request.POST.get(f'player{i}Select')
+            position_id = request.POST.get(f'position{i}Select')
+            if player_username in selected_players:
+                return redirect('coach_dashboard')
+            selected_players.add(player_username)
+            players_and_positions.append((player_username, position_id))
+        
+        connection = connect_to_database()
+        cursor = connection.cursor()
+
+        #check if the player can play in the selected position
+        for player_username, position_id in players_and_positions:
+            cursor.execute(
+                "SELECT COUNT(*) FROM PlayerPositions WHERE username = %s AND position = %s",
+                [player_username, position_id]
+            )
+            count = cursor.fetchone()[0]
+            if count == 0:
+                return redirect('coach_dashboard')
+        #find max squad id
+        cursor.execute("SELECT MAX(squad_ID) FROM SessionSquads")
+        max_squad_id = cursor.fetchone()[0]
+        squad_id = max_squad_id + 1 if max_squad_id else 1
+        # Insert players and positions into the database
+        for player_username, position_id in players_and_positions:
+            cursor.execute(
+                "INSERT INTO SessionSquads (squad_ID, session_ID, played_player_username, position) VALUES (%s, %s, %s, %s)",
+                [squad_id, session_id, player_username, position_id]
+            )
+        return redirect('coach_dashboard')
+    return redirect('coach_dashboard')
 
 def jury_dashboard(request):
     
