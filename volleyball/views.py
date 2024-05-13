@@ -122,6 +122,21 @@ def get_stadium(request):
         return JsonResponse(stadiums_data, safe=False)
     return render(request, 'database_manager_dashboard.html', {'database_manager_name': database_manager_name})
 
+def get_jury_names_surnames(request):
+    coach_username = request.session.get('username')
+    if request.method == 'POST':
+        connection = connect_to_database()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT name, surname FROM Jury")
+            jury = cursor.fetchall()
+        # Convert the list of tuples to a list of dictionaries
+        jury_data = [{'name': jury[0], 'surname': jury[1]} for jury in jury]
+        # Return JSON response with jury list
+        cursor.close()
+        connection.close()
+        return JsonResponse(jury_data, safe=False)
+    return render(request, 'coach_dashboard.html', {'coach_username': coach_username})
+
 def update_stadium(request):
     database_manager_name = request.session.get('username')
     if request.method == 'POST':
@@ -216,17 +231,50 @@ def player_dashboard(request):
 
 def coach_dashboard(request):
     
-    coach_name = request.session.get('username')
+    coach_username = request.session.get('username')
 
     if request.method == 'GET':
+        sql_query = """
+        SELECT name, surname
+        FROM Coach
+        WHERE username = %s
+        """
         conn = connect_to_database()
         cursor = conn.cursor()
 
+        cursor.execute(sql_query, [coach_username])
+        coach_data = cursor.fetchone()
+
+        coach_name = coach_data[0] if coach_data else None
+        coach_surname = coach_data[1] if coach_data else None
+
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        team_query = \
+                    f"""
+                    SELECT team_name, team_ID
+                    FROM Team 
+                    WHERE coach_username = '{coach_username}' AND contract_start <= '{current_date}' AND contract_finish >= '{current_date}'
+                    """
+        cursor.execute(team_query)
+        team = cursor.fetchone()
+        team_name = team[0] if team else None
+        team_id = team[1] if team else None
+
+        #get max session id
+        cursor.execute("SELECT MAX(session_ID) FROM MatchSession")
+        max_session_id = cursor.fetchone()[0]
+        session_id = max_session_id + 1 if max_session_id else 1
+
         try:
-            query = f"SELECT * FROM MatchSession"
+            query = """
+                SELECT ms.session_ID, t.team_name, ms.stadium_name, ms.time_slot, ms.date, j.name , j.surname, ms.rating, t.team_ID
+                FROM MatchSession ms
+                JOIN Team t ON ms.team_ID = t.team_ID
+                JOIN Jury j ON ms.assigned_jury_username = j.username
+                ORDER BY ms.session_ID
+            """
             cursor.execute(query)
             matches = cursor.fetchall()
-            print("Matches: " + str(matches), file=sys.stderr)
         except Exception as e:
             messages.error(request, f'Failed to fetch matches: {e}')
             matches = []
@@ -234,7 +282,15 @@ def coach_dashboard(request):
         cursor.close()
         conn.close()
 
-        return render(request, 'coach_dashboard.html', {'coach_name': coach_name, 'sessions': matches})
+        context = {
+            'coach_name': coach_name,
+            'coach_surname': coach_surname,
+            'sessions': matches,
+            'team_name': team_name,
+            'team_id': team_id,
+            'session_id': session_id
+        }
+        return render(request, 'coach_dashboard.html', context)
     
     if request.method == 'POST':
         conn = connect_to_database()
@@ -360,47 +416,46 @@ def create_match_session(request):
     if request.method == 'POST':
         session_id = request.POST.get('session_id')
         team_id = request.POST.get('team_id')
-        stadium_id = request.POST.get('stadium_id')
         stadium_name = request.POST.get('stadium_name')
-        stadium_country = request.POST.get('stadium_country')
         time_slot = request.POST.get('time_slot')
         date = request.POST.get('date')
-        assigned_jury_username = request.POST.get('assigned_jury_username')
+        assigned_jury_name_surname = request.POST.get('assigned_jury_name_surname')
+
+        # Extract the username from the name and surname
+        assigned_jury_name = assigned_jury_name_surname.split(' ')[0]
+        assigned_jury_surname = assigned_jury_name_surname.split(' ')[1]
 
         connection = connect_to_database()
 
-        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-
+        #sql query to find jury username
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT username FROM Jury WHERE name = '{assigned_jury_name}' AND surname = '{assigned_jury_surname}'")
+            assigned_jury_username = cursor.fetchone()[0]
+        
+        #sql query to find stadium id and country
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT stadium_ID, country FROM Stadium WHERE stadium_name = '{stadium_name}'")
+            stadium_data = cursor.fetchone()
+            stadium_id = stadium_data[0]
+            stadium_country = stadium_data[1]
         
         try:
             with connection.cursor() as cursor:
-                team_query = \
-                    f"""
-                    SELECT * 
-                    FROM Team 
-                    WHERE team_ID = '{team_id}' AND coach_username = '{request.session.get('username')}' AND contract_start <= '{current_date}' AND contract_finish >= '{current_date}'
-                    """
-                cursor.execute(team_query)
-                team = cursor.fetchone()
-
-                if not team:
-                    cursor.close()
-                    messages.error(request, 'You are not the coach of this team')
-                    return HttpResponse('You are not the coach of this team')
                 
                 insert_query = \
                     f"""
                     INSERT INTO MatchSession (session_ID, team_ID, stadium_ID, stadium_name, stadium_country, time_slot, date, assigned_jury_username) 
                     VALUES ('{session_id}', '{team_id}', '{stadium_id}', '{stadium_name}', '{stadium_country}', '{time_slot}', '{date}', '{assigned_jury_username}')
                     """
+                print(insert_query, file=sys.stderr)
                 cursor.execute(insert_query)
         except Exception as e:
             cursor.close()
             messages.error(request, f'Failed to create match session: {e}')
-            return HttpResponse('Failed to create match session')
+            return redirect('coach_dashboard')
         
         connection.commit()
         cursor.close()
 
 
-    return HttpResponse('Match session created successfully')
+    return redirect('coach_dashboard')

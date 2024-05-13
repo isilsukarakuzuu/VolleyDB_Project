@@ -1,16 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delete Match Sessions</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333333;
+        }
+
+        .welcome-message {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 20px;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid #dddddd;
             text-align: left;
             padding: 8px;
@@ -19,23 +41,58 @@
         th {
             background-color: #f2f2f2;
         }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="date"],
+        select {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
+
 <body>
     <h1>Coach Dashboard</h1>
-    <p class="welcome-message">Welcome, {{ coach_name }}!</p>
+    <p class="welcome-message">Welcome, {{ coach_name }} {{ coach_surname }} !</p>
     <h2>Delete Match Sessions</h2>
     <table>
         <thead>
             <tr>
                 <th>Session ID</th>
                 <th>Team ID</th>
-                <th>Stadium ID</th>
+                <th>Team Name</th>
                 <th>Stadium Name</th>
-                <th>Stadium Country</th>
                 <th>Time Slot</th>
                 <th>Date</th>
-                <th>Assigned Jury Username</th>
+                <th>Assigned Jury</th>
                 <th>Rating</th>
                 <th>Action</th>
             </tr>
@@ -44,14 +101,13 @@
             {% for session in sessions %}
             <tr>
                 <td>{{ session.0 }}</td>
+                <td>{{ session.8 }}</td>
                 <td>{{ session.1 }}</td>
                 <td>{{ session.2 }}</td>
                 <td>{{ session.3 }}</td>
                 <td>{{ session.4 }}</td>
-                <td>{{ session.5 }}</td>
-                <td>{{ session.6 }}</td>
+                <td>{{ session.5 }} {{ session.6 }}</td>
                 <td>{{ session.7 }}</td>
-                <td>{{ session.8 }}</td>
                 <td>
                     <form method="POST" action="">
                         {% csrf_token %}
@@ -61,20 +117,96 @@
                 </td>
             </tr>
             {% endfor %}
-            <form method="post" action="/create_match_session/">
-                {% csrf_token %}
-                <td><input type="number" name="session_id" required></td>
-                <td><input type="number" name="team_id" required></td>
-                <td><input type="number" name="stadium_id" required></td>
-                <td><input type="text" name="stadium_name" required></td>
-                <td><input type="text" name="stadium_country" required></td>
-                <td><input type="number" name="time_slot" min="1" max="3" required></td>
-                <td><input type="date" name="date" required></td>
-                <td><input type="text" name="assigned_jury_username" required></td>
-                <td>None</td>
-                <td><button type="submit">Create</button></td>
-            </form>
+            <tr>
+                <form method="post" action="/create_match_session/">
+                    {% csrf_token %}
+                    <input type="hidden" name="session_id" value="{{ session_id }}">
+                    <input type="hidden" name="team_id" value="{{ team_id }}">
+                    <td>{{ session_id }}</td>
+                    <td>{{ team_id }}</td>
+                    <td>{{ team_name }}</td>
+                    <td>
+                        <select name="stadium_name" required>
+                            <option value="" disabled selected>Select</option>
+                            <!-- Stadium options will be populated dynamically -->
+                        </select>
+                    </td>
+                    <td>
+                        <select name="time_slot" required>
+                            <option value="" disabled selected>Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </td>
+
+                    <td><input type="date" name="date" required></td>
+                    <td>
+                        <select name="assigned_jury_name_surname" required>
+                            <option value="" disabled selected>Select</option>
+                            <!-- Jury options will be populated dynamically -->
+                        </select>
+                    <td>None</td>
+                    <td><button type="submit">Create</button></td>
+                </form>
+            </tr>
         </tbody>
     </table>
+    <script>
+
+        window.onload = function () {
+            fetchStadiums();
+            fetchJuryNamesSurnames();
+        };
+
+        function fetchStadiums() {
+            const csrftoken = getCookie('csrftoken');
+            fetch("{% url 'get_stadium' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const selectStadium = document.querySelector("select[name='stadium_name']");
+                    data.forEach(stadium => {
+                        const option = document.createElement("option");
+                        option.value = stadium.stadium_name; // Assuming stadium name is unique
+                        option.textContent = stadium.stadium_name;
+                        selectStadium.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Error fetching stadiums:", error));
+        }
+
+        function fetchJuryNamesSurnames() {
+            const csrftoken = getCookie('csrftoken');
+            fetch("{% url 'get_jury_names_surnames' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const selectJury = document.querySelector("select[name='assigned_jury_name_surname']");
+                    data.forEach(jury => {
+                        const option = document.createElement("option");
+                        option.value = `${jury.name} ${jury.surname}`;
+                        option.textContent = `${jury.name} ${jury.surname}`;
+                        selectJury.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Error fetching jury names and surnames:", error));
+        }
+
+        function getCookie(name) {
+            const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return cookieValue ? cookieValue.pop() : '';
+        }
+
+    </script>
 </body>
+
 </html>
