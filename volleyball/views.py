@@ -350,8 +350,8 @@ def create_squad(request):
         players_and_positions = []
         selected_players = set()  #chechk if the player is selected twice or more
         for i in range(1, 7):  
-            player_username = request.POST.get(f'player{i}Select')
-            position_id = request.POST.get(f'position{i}Select')
+            player_username = request.POST.get(f'player{i}')
+            position_id = request.POST.get(f'position{i}')
             if player_username in selected_players:
                 return redirect('coach_dashboard')
             selected_players.add(player_username)
@@ -376,9 +376,15 @@ def create_squad(request):
         # Insert players and positions into the database
         for player_username, position_id in players_and_positions:
             cursor.execute(
-                "INSERT INTO SessionSquads (squad_ID, session_ID, played_player_username, position) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO SessionSquads (squad_ID, session_ID, played_player_username, position_ID) VALUES (%s, %s, %s, %s)",
                 [squad_id, session_id, player_username, position_id]
             )
+            squad_id += 1
+        
+        connection.commit()
+        cursor.close()
+        connection.close()
+
         return redirect('coach_dashboard')
     return redirect('coach_dashboard')
 
@@ -460,8 +466,7 @@ def jury_dashboard(request):
 
         return render(request, 'jury_dashboard.html', context)
 
-    if request.method == 'POST':
-        print(request.POST, file=sys.stderr)
+    if request.method == 'POST':       
         conn = connect_to_database()
         cursor = conn.cursor()
 
@@ -520,7 +525,6 @@ def create_match_session(request):
                     INSERT INTO MatchSession (session_ID, team_ID, stadium_ID, stadium_name, stadium_country, time_slot, date, assigned_jury_username) 
                     VALUES ('{session_id}', '{team_id}', '{stadium_id}', '{stadium_name}', '{stadium_country}', '{time_slot}', '{date}', '{assigned_jury_username}')
                     """
-                print(insert_query, file=sys.stderr)
                 cursor.execute(insert_query)
         except Exception as e:
             cursor.close()

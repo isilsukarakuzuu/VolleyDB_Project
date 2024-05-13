@@ -187,14 +187,13 @@
 
             <div>
                 <p>Player 1:</p>
-                {% csrf_token %}
-                <select id="player1Select" class="player-select" required>
+                <select id="player1Select" class="player-select" name="player1" required>
                     <option value="" disabled selected>Select Player</option>
                     {% for player in players %}
                     <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
                     {% endfor %}
                 </select>
-                <select id="position1Select" class="position-select" required>
+                <select id="position1Select" class="position-select" name="position1" required>
                     <option value="" disabled selected>Select Position</option>
                     <option value="0">0</option>
                     <option value="1">1</option>
@@ -206,13 +205,13 @@
 
             <div>
                 <p>Player 2:</p>
-                <select id="player2Select" class="player-select" required>
+                <select id="player2Select" class="player-select" name="player2" required>
                     <option value="" disabled selected>Select Player</option>
                     {% for player in players %}
                     <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
                     {% endfor %}
                 </select>
-                <select id="position2Select" class="position-select" required>
+                <select id="position2Select" class="position-select" name="position2" required>
                     <option value="" disabled selected>Select Position</option>
                     <option value="0">0</option>
                     <option value="1">1</option>
@@ -224,13 +223,13 @@
 
             <div>
                 <p>Player 3:</p>
-                <select id="player3Select" class="player-select" required>
+                <select id="player3Select" class="player-select" name="player3" required>
                     <option value="" disabled selected>Select Player</option>
                     {% for player in players %}
                     <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
                     {% endfor %}
                 </select>
-                <select id="position3Select" class="position-select" required>
+                <select id="position3Select" class="position-select" name="position3" required>
                     <option value="" disabled selected>Select Position</option>
                     <option value="0">0</option>
                     <option value="1">1</option>
@@ -242,13 +241,13 @@
 
             <div>
                 <p>Player 4:</p>
-                <select id="player4Select" class="player-select" required>
+                <select id="player4Select" class="player-select" name="player4" required>
                     <option value="" disabled selected>Select Player</option>
                     {% for player in players %}
                     <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
                     {% endfor %}
                 </select>
-                <select id="position4Select" class="position-select" required>
+                <select id="position4Select" class="position-select" name="position4" required>
                     <option value="" disabled selected>Select Position</option>
                     <option value="0">0</option>
                     <option value="1">1</option>
@@ -260,13 +259,13 @@
 
             <div>
                 <p>Player 5:</p>
-                <select id="player5Select" class="player-select" required>
+                <select id="player5Select" class="player-select" name="player5" required>
                     <option value="" disabled selected>Select Player</option>
                     {% for player in players %}
                     <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
                     {% endfor %}
                 </select>
-                <select id="position5Select" class="position-select" required>
+                <select id="position5Select" class="position-select" name="position5" required>
                     <option value="" disabled selected>Select Position</option>
                     <option value="0">0</option>
                     <option value="1">1</option>
@@ -278,13 +277,13 @@
 
             <div>
                 <p>Player 6:</p>
-                <select id="player6Select" class="player-select" required>
+                <select id="player6Select" class="player-select" name="player6" required>
                     <option value="" disabled selected>Select Player</option>
                     {% for player in players %}
                     <option value="{{ player.0 }}">{{ player.1 }} {{ player.2 }}</option>
                     {% endfor %}
                 </select>
-                <select id="position6Select" class="position-select" required>
+                <select id="position6Select" class="position-select" name="position6" required>
                     <option value="" disabled selected>Select Position</option>
                     <option value="0">0</option>
                     <option value="1">1</option>
