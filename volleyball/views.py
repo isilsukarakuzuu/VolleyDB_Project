@@ -499,12 +499,22 @@ def create_match_session(request):
         date = request.POST.get('date')
         assigned_jury_name_surname = request.POST.get('assigned_jury_name_surname')
 
+        #get username of the coach
+        coach_username = request.session.get('username')
+        
         # Extract the username from the name and surname
         assigned_jury_name = assigned_jury_name_surname.split(' ')[0]
         assigned_jury_surname = assigned_jury_name_surname.split(' ')[1]
 
         connection = connect_to_database()
-
+        #check if the coach is still the coach of the team in the current date
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM Team WHERE team_ID = '{team_id}' AND coach_username = '{coach_username}' AND contract_start <= '{date}' AND contract_finish >= '{date}'")
+            team = cursor.fetchone()
+            if not team:
+                messages.error(request, 'You are not the coach of this team in the selected date')
+                return redirect('coach_dashboard')
+            
         #sql query to find jury username
         with connection.cursor() as cursor:
             cursor.execute(f"SELECT username FROM Jury WHERE name = '{assigned_jury_name}' AND surname = '{assigned_jury_surname}'")
